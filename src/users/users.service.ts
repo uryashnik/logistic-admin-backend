@@ -17,8 +17,12 @@ export class UsersService {
     return user;
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} user`;
+  async findOne(id: number): Promise<User | null> {
+    return await this.usersRepository.createQueryBuilder('users').where('users.id = :id', { id }).getOne();
+  }
+
+  async findByEmail(email: string): Promise<User | null> {
+    return await this.usersRepository.createQueryBuilder('users').where('users.email = :email', { email }).getOne();
   }
 
   update(id: number, updateUserDto: UpdateUserDto) {
