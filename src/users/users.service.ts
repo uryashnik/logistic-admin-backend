@@ -2,12 +2,12 @@ import { Injectable } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
-import { User } from '../common/entities/user.entity';
+import { UserEntity } from '../common/entities/user.entity';
 import { Repository } from 'typeorm';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectRepository(User) private readonly usersRepository: Repository<User>) {}
+  constructor(@InjectRepository(UserEntity) private readonly usersRepository: Repository<UserEntity>) {}
   create(createUserDto: CreateUserDto) {
     return 'This action adds a new user';
   }
@@ -17,11 +17,11 @@ export class UsersService {
     return user;
   }
 
-  async findOne(id: number): Promise<User | null> {
-    return await this.usersRepository.createQueryBuilder('users').where('users.id = :id', { id }).getOne();
+  async findOne(id: number): Promise<UserEntity | null> {
+    return await this.usersRepository.createQueryBuilder('users').leftJoinAndSelect('users.roles', 'roles').where('users.id = :id', { id }).getOne();
   }
 
-  async findByEmail(email: string): Promise<User | null> {
+  async findByEmail(email: string): Promise<UserEntity | null> {
     return await this.usersRepository.createQueryBuilder('users').where('users.email = :email', { email }).getOne();
   }
 
