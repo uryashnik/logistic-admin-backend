@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -8,28 +8,55 @@ import { Repository } from 'typeorm';
 @Injectable()
 export class UsersService {
   constructor(@InjectRepository(UserEntity) private readonly usersRepository: Repository<UserEntity>) {}
-  create(createUserDto: CreateUserDto) {
-    return 'This action adds a new user';
+
+  private getQueryBuilder() {
+    return this.usersRepository.createQueryBuilder('users').leftJoinAndSelect('users.roles', 'roles');
   }
 
-  async findAll() {
-    const user = await this.usersRepository.createQueryBuilder('users').where('users.id = :id', { id: 1 }).getOne();
-    return user;
+  public async create(createUserDto: CreateUserDto) {
+    const user = await this.findByEmail(createUserDto.email);
+    if (user) {
+      throw new BadRequestException(`User with email ${createUserDto.email} already exists`);
+    }
+    const newUser = this.usersRepository.create(createUserDto);
+    return await this.usersRepository.save(newUser);
   }
 
-  async findOne(id: number): Promise<UserEntity | null> {
-    return await this.usersRepository.createQueryBuilder('users').leftJoinAndSelect('users.roles', 'roles').where('users.id = :id', { id }).getOne();
+  public async findOne(id: number): Promise<UserEntity | null> {
+    return await this.getQueryBuilder().where('users.id = :id', { id }).getOne();
   }
 
-  async findByEmail(email: string): Promise<UserEntity | null> {
+  public async findByEmail(email: string): Promise<UserEntity | null> {
     return await this.usersRepository.createQueryBuilder('users').where('users.email = :email', { email }).getOne();
   }
 
-  update(id: number, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+  public async findAll() {
+    return await this.getQueryBuilder().take(10).getMany();
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} user`;
+  public async update(id: number, updateUserDto: UpdateUserDto) {
+    const user = await this.findOne(id);
+
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+
+    const { roles, ...updateUserData } = updateUserDto;
+
+    Object.assign(user, updateUserData);
+    if (roles?.length) {
+      user.roles = roles;
+    }
+
+    return await this.usersRepository.save(user);
+  }
+
+  public async remove(id: number, userId: number) {
+    const user = await this.findOne(id);
+    if (!user) {
+      throw new NotFoundException(`User with id ${id} not found`);
+    }
+    Object.assign(user, { deletedBy: { id: userId }, deletedAt: new Date() });
+    return this.usersRepository.save(user);
   }
 }
