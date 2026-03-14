@@ -10,7 +10,11 @@ export class UsersService {
   constructor(@InjectRepository(UserEntity) private readonly usersRepository: Repository<UserEntity>) {}
 
   private getQueryBuilder() {
-    return this.usersRepository.createQueryBuilder('users').leftJoinAndSelect('users.roles', 'roles');
+    return this.usersRepository
+      .createQueryBuilder('users')
+      .leftJoinAndSelect('users.roles', 'roles')
+      .leftJoinAndSelect('users.createdBy', 'createdBy')
+      .leftJoinAndSelect('users.updatedBy', 'updatedBy');
   }
 
   public async create(createUserDto: CreateUserDto) {

@@ -4,13 +4,14 @@ import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AuthRequest } from '../common/types';
+import { SetUserPipe } from '../common/pipes/set-user.pipe';
 
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
+  create(@Body(SetUserPipe) createUserDto: CreateUserDto) {
     return this.usersService.create(createUserDto);
   }
 
