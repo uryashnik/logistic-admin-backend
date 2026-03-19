@@ -1,15 +1,18 @@
 import {
   BeforeInsert,
   Column,
-  CreateDateColumn, DeleteDateColumn,
+  CreateDateColumn,
+  DeleteDateColumn,
   Entity,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 import { OrderStatusType } from '../enums';
 import { UserEntity } from './user.entity';
+import { OrderHistoryEntity } from './order-history.entity';
 
 @Entity('orders')
 export class OrderEntity {
@@ -40,6 +43,9 @@ export class OrderEntity {
 
   @Column({ type: 'enum', enum: OrderStatusType, default: OrderStatusType.Created })
   status: OrderStatusType;
+
+  @OneToMany(() => OrderHistoryEntity, (orderHistory) => orderHistory.order, { cascade: true })
+  history: OrderHistoryEntity[];
 
   @ManyToOne(() => UserEntity, { onDelete: 'SET NULL' })
   @JoinColumn({ name: 'created_by' })

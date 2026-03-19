@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderDto } from './dto/update-order.dto';
 import { OrderEntity } from '../common/entities/order.entity';
@@ -9,7 +9,11 @@ import { Repository } from 'typeorm';
 export class OrderService {
   constructor(@InjectRepository(OrderEntity) private readonly orderRepository: Repository<OrderEntity>) {}
 
-  public async create(createOrderDto: CreateOrderDto): Promise<OrderEntity> {
+  private getQueryBuilder() {
+    return this.orderRepository.createQueryBuilder('orders');
+  }
+
+  public create(createOrderDto: CreateOrderDto): Promise<OrderEntity> {
     const order = this.orderRepository.create(createOrderDto);
     return this.orderRepository.save(order);
   }
@@ -18,15 +22,33 @@ export class OrderService {
     return await this.orderRepository.createQueryBuilder('orders').take(10).getMany();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} order`;
+  public async findOne(id: number) {
+    const order = await this.orderRepository.findOne({ where: { id } });
+
+    if (!order) throw new NotFoundException(`Order with id ${id} not found`);
+
+    return order;
   }
 
-  update(id: number, updateOrderDto: UpdateOrderDto) {
-    return `This action updates a #${id} order`;
+  public async update(id: number, updateOrderDto: UpdateOrderDto) {
+    const order = await this.orderRepository.findOne({ where: { id }, relations: ['history'] });
+    if (!order) {
+      throw new NotFoundException(`Order with id ${id} not found`);
+    }
+    const { history, ...rest } = updateOrderDto;
+    Object.assign(order, { ...rest, history: [...order.history, { ...history, status: rest.status }] });
+
+    return this.orderRepository.save(order);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} order`;
+  public async remove(id: number, userId: number) {
+    const order = await this.orderRepository.findOne({ where: { id } });
+    if (!order) {
+      throw new NotFoundException(`Order with id ${id} not found`);
+    }
+
+    Object.assign(order, { deletedAt: new Date(), deletedBy: { id: userId } });
+
+    return this.orderRepository.save(order);
   }
 }
