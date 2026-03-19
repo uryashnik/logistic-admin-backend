@@ -6,9 +6,16 @@ import { entities } from './common/entities';
 import { migrations } from './common/migrations';
 import { AuthModule } from './auth/auth.module';
 import { JwtAuthGuard } from './auth/guards/jwt-auth.guard';
+import { OrderModule } from './order/order.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true, envFilePath: [`.env`] }), PostgresModule.register(entities, migrations), UsersModule, AuthModule],
+  imports: [
+    ConfigModule.forRoot({ isGlobal: true, envFilePath: [`.env`] }),
+    PostgresModule.register(entities, migrations),
+    UsersModule,
+    AuthModule,
+    OrderModule,
+  ],
   providers: [{ provide: 'APP_GUARD', useClass: JwtAuthGuard }],
 })
 export class AppModule {}
