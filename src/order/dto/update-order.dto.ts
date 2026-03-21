@@ -1,5 +1,6 @@
 import { IsDefined, IsEnum, IsOptional, IsString } from 'class-validator';
 import { OrderStatusType } from '../../common/enums';
+import { UpdatedByDto } from '../../common/dto';
 
 class OrderHistoryDto {
   @IsOptional()
@@ -19,7 +20,7 @@ class OrderHistoryDto {
   addressTo: string;
 }
 
-export class UpdateOrderDto {
+export class UpdateOrderDto extends UpdatedByDto {
   @IsDefined()
   @IsEnum(OrderStatusType)
   status: OrderStatusType;

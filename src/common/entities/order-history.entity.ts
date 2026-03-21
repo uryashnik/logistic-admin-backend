@@ -1,6 +1,7 @@
-import { Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, CreateDateColumn, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 import { OrderStatusType } from '../enums';
 import { OrderEntity } from './order.entity';
+import { UserEntity } from './user.entity';
 
 @Entity('orders_history')
 export class OrderHistoryEntity {
@@ -24,6 +25,10 @@ export class OrderHistoryEntity {
 
   @Column({ name: 'address_to', nullable: true })
   addressTo: string;
+
+  @ManyToOne(() => UserEntity, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'created_by' })
+  createdBy: UserEntity;
 
   @CreateDateColumn({ type: 'timestamptz', name: 'created_at' })
   createdAt?: Date;

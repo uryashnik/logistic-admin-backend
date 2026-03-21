@@ -19,7 +19,7 @@ export class OrderService {
   }
 
   public async findAll() {
-    return await this.orderRepository.createQueryBuilder('orders').take(10).getMany();
+    return await this.orderRepository.find({ take: 10, relations: ['history'] });
   }
 
   public async findOne(id: number) {
@@ -36,7 +36,7 @@ export class OrderService {
       throw new NotFoundException(`Order with id ${id} not found`);
     }
     const { history, ...rest } = updateOrderDto;
-    Object.assign(order, { ...rest, history: [...order.history, { ...history, status: rest.status }] });
+    Object.assign(order, { ...rest, history: [...order.history, { ...history, status: rest.status, createdBy: rest.updatedBy }] });
 
     return this.orderRepository.save(order);
   }
